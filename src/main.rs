@@ -41,7 +41,7 @@ struct Items<T>{
 }
 
 fn print_songs(songs: vec<&Song){
-
+    
 }
 
 #[tokio::main]
@@ -53,4 +53,26 @@ async fn main(){
         "https://api.spotify.com/v1/search?q={query}&type=track,artist",
         query = search_query
     );
+
+    let client = reqwest = reqwest::new();
+    let response = client
+    .get(url)
+    .header(AUTHORIZATION, format!("Bearer {}", auth_token))
+    .header(CONTENT_TYPE, "application/json")
+    .header(ACCEPT, "application/json")
+    .send()
+    .await
+    .unwrap();
+    match response.status(){
+        reqwest::StatusCode::OK => {
+            match response.json::<APIResponse>().await {
+                Ok(parsed) => print_songs(parsed.songs.items.iter().collect()),
+                Err(_) => println!("Response didn't match the struct")
+            };
+        }
+        
+        reqwest::StatusCode::UNAUTHORIZED => {
+            println!("Need to get a new token");
+        }
+    }
 }
