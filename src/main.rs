@@ -1,6 +1,7 @@
 use reqwest;
-use reqwest::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
+use reqwest::header::{ACCEPT, AUTHORIZATION, CONTENT_TYPE};
 use serde::{Deserialize, Serialize};
+use core::panic;
 use std::env;
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -31,17 +32,31 @@ struct Song {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct APIResponse{
-    songs: Items<Song>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
 struct Items<T>{
     items: Vec<T>
 }
 
-fn print_songs(songs: vec<&Song){
-    
+#[derive(Serialize, Deserialize, Debug)]
+struct APIResponse{
+    songs: Items<Song>,
+}
+
+fn print_songs(songs: Vec<&Song>){
+    for song in songs {
+        println!("{}", song.name);
+        println!("{}", song.album.name);
+        println!(
+            "{}",
+            song
+                .album
+                .artists
+                .iter()
+                .map(|artist| artist.name.to_string())
+                .collect::<String>()
+        );
+        println!("{}", song.external_urls.spotify);
+        println!("-----------------")
+    }
 }
 
 #[tokio::main]
@@ -54,7 +69,7 @@ async fn main(){
         query = search_query
     );
 
-    let client = reqwest = reqwest::new();
+    let client = reqwest::Client::new();
     let response = client
     .get(url)
     .header(AUTHORIZATION, format!("Bearer {}", auth_token))
@@ -74,5 +89,8 @@ async fn main(){
         reqwest::StatusCode::UNAUTHORIZED => {
             println!("Need to get a new token");
         }
-    }
+        other => {
+            panic!("Oops! Something unexpected happened: {:?}", other);
+        }
+    };
 }
